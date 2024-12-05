@@ -18,3 +18,8 @@ router.delete('/deleteToDo/:id', deleteToDo);
 
 // Export the router
 module.exports = router;
+
+app.get('/api/todo', (req, res) => {
+    res.send('Todo endpoint works!');
+});
+
