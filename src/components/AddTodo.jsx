@@ -20,13 +20,12 @@ export default function AddTodo() {
     setIsLoading(true); // Set loading to true before making the request
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/todolist`, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/todolist/add`, {
         message: message,
       });
       if (response.data.success === "Created") {
         toast.success("Todo created successfully!");
         setMessage(""); // Clear the input field
-        // Optionally, refresh the todo list or redirect
         window.location.reload(); // Or use your component's state to add the new todo dynamically
       }
     } catch (error) {
@@ -38,21 +37,24 @@ export default function AddTodo() {
   };
 
   return (
-    <div className="container">
-      <input
-        type="text"
-        placeholder="Add task here"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        disabled={isLoading} // Disable input while loading
-      />
-      <button
-        onClick={createTodo}
-        className="btn"
-        disabled={isLoading} // Disable button while loading
-      >
-        {isLoading ? "Adding..." : "ADD"}
-      </button>
+    <div className="min-h-48 bg-gray-800 flex items-center justify-center">
+      <div className="bg-gray-700 p-6 rounded-lg w-full max-w-md">
+        <input
+          type="text"
+          placeholder="Add task here"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          disabled={isLoading} // Disable input while loading
+          className="w-full p-3 mb-4 bg-gray-600 text-yellow-500 rounded-md placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        />
+        <button
+          onClick={createTodo}
+          className="w-full p-3 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 disabled:bg-gray-600"
+          disabled={isLoading} // Disable button while loading
+        >
+          {isLoading ? "Adding..." : "ADD"}
+        </button>
+      </div>
     </div>
   );
 }
