@@ -1,25 +1,16 @@
-const { Router } = require('express'); // Destructure Router from express
-const { getAllToDo, createToDo, updateToDo, deleteToDo } = require('../controllers/todoCtrl');
+const express = require('express');
+const {
+  createToDo,
+  getAllToDo,
+  updateToDo,
+  deleteToDo,
+} = require('../controllers/todoCtrl');
+const router = express.Router();
 
-const router = Router(); // Use Router to create a new router instance
+// Route definitions
+router.post('/add', createToDo);         // Route to create a new todo
+router.get('/getall', getAllToDo);       // Route to fetch all todos
+router.put('/updateToDo/:id', updateToDo); // Route to update a todo
+router.delete('/deleteToDo/:id', deleteToDo); // Route to delete a todo
 
-// Define Routes
-// GET -> Read
-router.get('/getall', getAllToDo);
-
-// POST -> Create
-router.post('/', createToDo);
-
-// PUT -> Update
-router.put('/updateToDo/:id', updateToDo);
-
-// DELETE -> Delete
-router.delete('/deleteToDo/:id', deleteToDo);
-
-// Export the router
 module.exports = router;
-
-app.get('/api/todo', (req, res) => {
-    res.send('Todo endpoint works!');
-});
-

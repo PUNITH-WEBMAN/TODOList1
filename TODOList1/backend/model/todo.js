@@ -1,12 +1,12 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const todoSchema = new mongoose.Schema({
-    message:{
-        type: String,
-        require: true,
-        minLength: 4,
-        maxLength: 20
-   }
-})
-const Todo = mongoose.model('todo', todoSchema)
-module.exports = Todo
+  message: {
+    type: String,
+    required: true,
+    minlength: 4,
+    maxlength: 20,
+  },
+});
+
+module.exports = mongoose.model('Todo', todoSchema);
