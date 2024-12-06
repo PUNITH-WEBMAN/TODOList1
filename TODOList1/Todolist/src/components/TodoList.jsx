@@ -1,118 +1,165 @@
-import { MdDelete } from "react-icons/md"; 
-import { AiFillEdit } from "react-icons/ai"; 
-import React, { useEffect, useState } from 'react'
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { MdDelete } from "react-icons/md";
+import { AiFillEdit } from "react-icons/ai";
 import { toast } from "react-toastify";
 
 const TodoList = () => {
-    const[todos,setTodos]=useState([]);
-    const[isEditing,setIsEditing] = useState(false);
-    const[currentTodo,setCurrentTodo]=useState({_id:null,message:''});
-    const getAllToDo = async()=>{
-        try {
-            const response = await axios.get(`http://localhost:5000/todolist/getall`);
-            setTodos(response.data.data);
+  const [todos, setTodos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentTodo, setCurrentTodo] = useState({ _id: null, message: "" });
 
-        } catch (error) {
-            console.error(error);
-            
-        }
-    };
-    useEffect(()=>{
-        getAllToDo();
-    },[]);
-    //The useEffect hook is an essential part of this React component.It is used to perform side effects in functional components,such as fetching data, subscribing to events,or manually updating the DOM
-    //In this component, the useEffect is used to fetch the initial list of to-dos from the backend when the component is first rendered.
-    //In this case getAllTodos()is called inside this function to fetch the list of to-dos.
-    //the empty array([])is the dependency array
-    //It specifies when the effect should re run
-    //an empty array means the effect will run only once after the initial render of the components
-    //if dependendies are added (e,g.,[todos]),the effect will run every time those dependendies change
-    
-    const handleDelete = async(id)=>{
-        try {
-            const result=await axios.delete(`http://localhost:5000/todolist/deleteToDo/${id}`);
-            if(result.data.success==='deleted'){
-                toast.success('Todo deleted successfully!');
-                getAllToDo();
+  const getAllToDo = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/todo/getall`
+      );
+      if (response.data.success) {
+        setTodos(response.data.data || []);
+      } else {
+        toast.error("Failed to fetch todos.");
+      }
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+      toast.error(
+        "Failed to load todos. Please check your API connection or backend."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error('failed to delete todo.');
-            
-        }
-    };
-    const handleEditInputChange=(e)=>{
-        setCurrentTodo({...currentTodo,message:e.target.value});
-    };
-    //{..currentTodo}means "create a new object and copy all properties of currentTodo into it."
-    //example workflow
-    //initial state:
-    //isEditing=false
-    //currentTodo={_id:null,message:''}
-    //The user is not editing any to-do yet.
-    //user clicks the edit button for a To-Do:Let's say the user clicks the edit button for the to do:
-    //{_id:'123',message:'Buy groceries'}
-    //handleEdit({_id:'123',message:'buy groceries'})
-    //The component detects isEditing = true and switches to the edit view
-    //the input field is pre-filled with the text "buy groceries"from currentTodo.Message
-    const handleEdit=(todo)=>{
-        setIsEditing(true);
-        setCurrentTodo({_id:todo._id,message:todo.message});
-    };
-    const handleUpdate = async ()=>{
-        //validate the message before updating
-        if(currentTodo.message.length<4||currentTodo.message.length>20){
-            toast.error('message must be between 4 and 20 characters.');
-            return;//block the update if validation fails
-        }
-        try {
-            const result = await axios.put(`http://localhost:5000/todolist/updateToDo/${currentTodo._id}`,{
-                message:currentTodo.message
-            });
-            if (result.data.success==='updated'){
-                toast.success('Todo updated successfully!');
-                getAllToDo();
-                setIsEditing(false);
-                setCurrentTodo({_id:null,message:''});
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error('failed to update todo.');
+  useEffect(() => {
+    getAllToDo();
+  }, []);
 
-            
-        }
-    };
-    const handleCancelEdit=()=>{
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/todo/deleteToDo/${id}`
+      );
+      if (response.data.success) {
+        toast.success("Todo deleted successfully!");
+        setTodos((prevTodos) => prevTodos.filter((todo) => todo._id !== id));
+      } else {
+        toast.error("Failed to delete todo.");
+      }
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      toast.error("Failed to delete todo. Please try again later.");
+    }
+  };
+
+  const handleEditClick = (todo) => {
+    setIsEditing(true);
+    setCurrentTodo(todo);
+  };
+
+  const handleInputChange = (e) => {
+    setCurrentTodo({ ...currentTodo, message: e.target.value });
+  };
+
+  const handleEditSave = async () => {
+    if (currentTodo.message.trim() === "") {
+      toast.error("Message cannot be empty.");
+      return;
+    }
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/todo/updateToDo/${currentTodo._id}`,
+        { message: currentTodo.message }
+      );
+      if (response.data.success) {
+        toast.success("Todo updated successfully!");
+        setTodos((prevTodos) =>
+          prevTodos.map((todo) =>
+            todo._id === currentTodo._id
+              ? { ...todo, message: currentTodo.message }
+              : todo
+          )
+        );
         setIsEditing(false);
-        setCurrentTodo({_id:null,message:''});
-        
-    };
-    
-  return (
-    <div className="text">
-        {isEditing? (
-            <div>
-                <input type="text" value={currentTodo.message}onChange={handleEditInputChange}/>
-                <button onClick={handleUpdate}>Update</button>
-                <button onClick={handleCancelEdit}>Cancel</button>
-                </div>
+        setCurrentTodo({ _id: null, message: "" });
+      } else {
+        toast.error("Failed to update todo.");
+      }
+    } catch (error) {
+      console.error("Error updating todo:", error);
+      toast.error("Failed to update todo. Please try again later.");
+    }
+  };
 
-        ):(
-            <ul>
-                {todos.map((todo)=>(
-                    <li key={todo._id}>
-                        {todo.message}
-                        <AiFillEdit className="icon" onClick={()=> handleEdit(todo)}/>
-                            <MdDelete  className="icon" onClick={()=> handleDelete(todo._id)}/>
-                    </li>
-                ))}
-            </ul>
-        )}
-      
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    setCurrentTodo({ _id: null, message: "" });
+  };
+
+  return (
+    <div className="max-w-screen min-h-screen mx-auto p-4 bg-black">
+      <h1 className="text-2xl font-bold text-center text-yellow-400 mb-6">
+        Todo Lists
+      </h1>
+
+      {isLoading ? (
+        <p className="text-center text-yellow-400">Loading todos...</p>
+      ) : todos.length > 0 ? (
+        todos.map((todo) => (
+          <div
+            key={todo._id}
+            className="flex justify-between items-center mb-4 p-4 border border-yellow-400 rounded-md bg-black hover:bg-yellow-50"
+          >
+            {isEditing && currentTodo._id === todo._id ? (
+              <input
+                type="text"
+                value={currentTodo.message}
+                onChange={handleInputChange}
+                className="flex-grow border focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 rounded px-2 py-1 mr-4 text-black"
+              />
+            ) : (
+              <span className="text-lg font-medium text-yellow-400">
+                {todo.message}
+              </span>
+            )}
+            <div className="flex items-center gap-4">
+              {isEditing && currentTodo._id === todo._id ? (
+                <>
+                  <button
+                    onClick={handleEditSave}
+                    className="bg-yellow-400 text-black px-3 py-1 rounded hover:bg-yellow-500"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={handleEditCancel}
+                    className="bg-gray-700 text-yellow-400 px-3 py-1 rounded hover:bg-yellow-400 hover:text-black"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <AiFillEdit
+                    className="text-green-400 cursor-pointer hover:text-yellow-500"
+                    onClick={() => handleEditClick(todo)}
+                    title="Edit Todo"
+                  />
+                  <MdDelete
+                    className="text-red-600 cursor-pointer hover:text-yellow-500"
+                    onClick={() => handleDelete(todo._id)}
+                    title="Delete Todo"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-center text-yellow-400">No todos available.</p>
+      )}
     </div>
   );
 };
 
-export default TodoList
+export default TodoList;
