@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/todolist", todoRoutes);
+app.use("/api/todo", todoRoutes); // Update route prefix to /api/todo
 
 // Database connection and server start
 mongoose
